@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+
+{% block title %}Compliance Report: {{ jira_key }} - TCMS{% endblock %}
+
+{% block content %}
+<style>
+    .tcms-report-unlinked-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .tcms-report-node-id {
+        display: inline-block;
+        max-width: 320px;
+        overflow: hidden;
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.75rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .tcms-report-environment-text {
+        color: var(--text);
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .tcms-report-date {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+
+    .tcms-report-compliance-success {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid rgba(16, 185, 129, 0.22);
+        border-radius: 10px;
+        background: rgba(16, 185, 129, 0.07);
+    }
+
+    .tcms-report-success-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        font-weight: 800;
+    }
+
+    .tcms-report-compliance-success strong {
+        color: #34d399;
+        font-size: 0.85rem;
+    }
+
+    .tcms-report-compliance-success p {
+        margin: 0.2rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+    }
+
+    .tcms-report-linked-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .tcms-report-section-heading {
+        margin-bottom: 1.1rem;
+    }
+
+    .tcms-report-section-heading h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 1.1rem;
+    }
+
+    .tcms-report-section-heading p {
+        margin: 0.35rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .tcms-report-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        margin-left: 0.4rem;
+        padding: 0 0.4rem;
+        border-radius: 999px;
+        background: rgba(96, 165, 250, 0.12);
+        color: #60a5fa;
+        font-size: 0.72rem;
+        vertical-align: middle;
+    }
+
+    .tcms-report-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+    }
+
+    .tcms-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .tcms-report-table th {
+        padding: 0.85rem 1rem;
+        background: rgba(148, 163, 184, 0.06);
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .tcms-report-table td {
+        padding: 0.9rem 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--text);
+        font-size: 0.84rem;
+        vertical-align: middle;
+    }
+
+    .tcms-report-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .tcms-report-table tbody tr:hover {
+        background: rgba(148, 163, 184, 0.05);
+    }
+
+    .tcms-report-case-id {
+        color: #60a5fa;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .tcms-report-case-id:hover {
+        text-decoration: underline;
+    }
+
+    .tcms-report-case-title {
+        color: var(--text);
+        line-height: 1.45;
+    }
+
+    .tcms-report-environments {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tcms-report-environment {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        max-width: 100%;
+        padding: 0.45rem 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .tcms-report-environment-name {
+        color: var(--text);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .tcms-report-digest {
+        max-width: 150px;
+        overflow: hidden;
+        color: var(--text-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.68rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .tcms-report-no-result {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-style: italic;
+    }
+
+    .tcms-report-empty {
+        padding: 2rem;
+        text-align: center;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+    }
+
+    .tcms-report-empty-icon {
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    .tcms-report-empty p {
+        margin: 0 0 0.25rem;
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    .tcms-report-empty span {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .tcms-report-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .tcms-report-back {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: color 0.2s ease;
+    }
+
+    .tcms-report-back:hover {
+        color: var(--text);
+    }
+
+    .tcms-report-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1.5rem;
+    }
+
+    .tcms-report-eyebrow {
+        margin-bottom: 0.35rem;
+        color: #60a5fa;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .tcms-report-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 1.6rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+    }
+
+    .tcms-report-description {
+        margin: 0.45rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .tcms-report-actions {
+        display: flex;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+    }
+
+    .tcms-report-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.65rem 0.9rem;
+        border-radius: 8px;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .tcms-report-action:hover {
+        transform: translateY(-1px);
+        opacity: 0.92;
+    }
+
+    .tcms-report-csv {
+        background: #10b981;
+        color: white;
+    }
+
+    .tcms-report-audit {
+        background: #6366f1;
+        color: white;
+    }
+
+    @media (max-width: 700px) {
+        .tcms-report-title-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .tcms-report-actions {
+            width: 100%;
+        }
+
+        .tcms-report-action {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+</style>
+
+
+<div class="tcms-report-header">
+
+    <a href="/tcms?jira_key={{ jira_key }}" class="tcms-report-back">
+        ← Back to Catalog (Filtered by {{ jira_key }})
+    </a>
+
+    <div class="tcms-report-title-row">
+
+        <div>
+
+            <div class="tcms-report-eyebrow">
+                JIRA COMPLIANCE
+            </div>
+
+            <h1 class="tcms-report-title">
+                Jira Compliance Report:
+                <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                    {{ jira_key }}
+                </span>
+            </h1>
+
+            <p class="tcms-report-description">
+                Automated test execution evidence and audit trail for release verification.
+            </p>
+
+        </div>
+
+        <div class="tcms-report-actions">
+
+            <a href="/api/tcms/jira/{{ jira_key }}/report.csv" class="tcms-report-action tcms-report-csv">
+                ↓ Download CSV
+            </a>
+
+            <a href="/api/tcms/jira/{{ jira_key }}/audit-pack" target="_blank"
+                class="tcms-report-action tcms-report-audit">
+                🔗 SOC 2 Audit Pack (JSON)
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- Linked Test Cases Section -->
+
+<div class="card tcms-report-linked-card">
+
+    <div class="tcms-report-section-heading">
+
+        <div>
+            <h2>
+                Linked Test Cases
+                <span class="tcms-report-count">
+                    {{ report.linked_cases | length }}
+                </span>
+            </h2>
+
+            <p>
+                Test cases linked to Jira ticket {{ jira_key }} with their latest execution evidence.
+            </p>
+        </div>
+
+    </div>
+
+    {% if report.linked_cases %}
+
+    <div class="tcms-report-table-wrapper">
+
+        <table class="tcms-report-table">
+
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Environment Results</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for case in report.linked_cases %}
+
+                <tr>
+
+                    <td>
+                        <a href="/tcms/cases/{{ case.case_id }}" class="tcms-report-case-id">
+                            {{ case.case_id }}
+                        </a>
+                    </td>
+
+                    <td>
+                        <span class="tcms-report-case-title">
+                            {{ case.title }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="badge badge-{{ case.status }}">
+                            {{ case.status }}
+                        </span>
+                    </td>
+
+                    <td>
+
+                        {% if case.environment_results %}
+
+                        <div class="tcms-report-environments">
+
+                            {% for env, res in case.environment_results.items() %}
+
+                            <div class="tcms-report-environment">
+
+                                <div class="tcms-report-environment-name">
+                                    {{ env }}
+                                </div>
+
+                                <span class="pill pill-{{ res.outcome | lower }}">
+                                    {{ res.outcome }}
+                                </span>
+
+                                <span class="tcms-report-digest" title="{{ res.image_digest }}">
+                                    {{ res.image_digest[:18] }}...
+                                </span>
+
+                            </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                        {% else %}
+
+                        <span class="tcms-report-no-result">
+                            No executions recorded
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="tcms-report-empty">
+        <div class="tcms-report-empty-icon">
+            🔗
+        </div>
+
+        <p>No test cases are currently linked to Jira ticket {{ jira_key }}.</p>
+
+        <span>
+            Link a test case to this Jira ticket to see execution evidence here.
+        </span>
+    </div>
+
+    {% endif %}
+
+</div>
+<!-- Unlinked Run Results Section -->
+
+<div class="card tcms-report-unlinked-card">
+
+    <div class="tcms-report-section-heading">
+
+        <div>
+            <h2>
+                Untagged Run Results
+                <span class="tcms-report-count">
+                    {{ report.unlinked_or_no_id_results | length }}
+                </span>
+            </h2>
+
+            <p>
+                Execution results from runs tagged with {{ jira_key }}
+                that do not reference a registered TCMS test case.
+            </p>
+        </div>
+
+    </div>
+
+    {% if report.unlinked_or_no_id_results %}
+
+    <div class="tcms-report-table-wrapper">
+
+        <table class="tcms-report-table">
+
+            <thead>
+                <tr>
+                    <th>Node ID</th>
+                    <th>Environment</th>
+                    <th>Outcome</th>
+                    <th>Executed At</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in report.unlinked_or_no_id_results %}
+
+                <tr>
+
+                    <td>
+                        <span class="tcms-report-node-id">
+                            {{ row.node_id }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="tcms-report-environment-text">
+                            {{ row.environment or 'pre-prod' }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="pill pill-{{ row.outcome | lower }}">
+                            {{ row.outcome }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="tcms-report-date">
+                            {{ row.created_at }}
+                        </span>
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="tcms-report-compliance-success">
+
+        <div class="tcms-report-success-icon">
+            ✓
+        </div>
+
+        <div>
+            <strong>
+                All executed tests are properly tagged
+            </strong>
+
+            <p>
+                Every executed test in runs for {{ jira_key }}
+                has a registered TCMS test case ID.
+            </p>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

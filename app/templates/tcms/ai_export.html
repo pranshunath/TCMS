@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block title %}AI Export - TCMS{% endblock %}
+
+{% block content %}
+
+<style>
+    .tcms-ai-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .tcms-ai-back {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .tcms-ai-back:hover {
+        color: var(--text);
+    }
+
+    .tcms-ai-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1.5rem;
+    }
+
+    .tcms-ai-eyebrow {
+        margin-bottom: 0.35rem;
+        color: #60a5fa;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .tcms-ai-title {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+    }
+
+    .tcms-ai-description {
+        margin: 0.45rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        max-width: 700px;
+    }
+
+    .tcms-ai-version {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+        padding: 0.65rem 0.85rem;
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 10px;
+        background: rgba(96, 165, 250, 0.07);
+        min-width: 100px;
+    }
+
+    .tcms-ai-version span {
+        color: var(--text-muted);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+    }
+
+    .tcms-ai-version strong {
+        color: #60a5fa;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 1rem;
+    }
+
+    .tcms-ai-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tcms-ai-card-heading {
+        margin-bottom: 1.25rem;
+    }
+
+    .tcms-ai-card-heading h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .tcms-ai-card-heading p {
+        margin: 0.3rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .tcms-ai-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+    }
+
+    .tcms-ai-summary-item {
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tcms-ai-summary-label {
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .tcms-ai-summary-value {
+        margin-top: 0.35rem;
+        color: var(--text);
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .tcms-ai-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1.25rem;
+    }
+
+    .tcms-ai-action-primary {
+        min-width: 150px;
+    }
+
+    .tcms-ai-preview {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+    }
+
+    .tcms-ai-preview table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tcms-ai-preview th {
+        padding: 0.85rem 1rem;
+        background: rgba(148, 163, 184, 0.06);
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+
+    .tcms-ai-preview td {
+        padding: 0.85rem 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--text);
+        font-size: 0.82rem;
+    }
+
+    .tcms-ai-preview tbody tr:hover {
+        background: rgba(148, 163, 184, 0.05);
+    }
+
+    .tcms-ai-case-id {
+        color: #60a5fa;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight: 700;
+    }
+
+    .tcms-ai-includes {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .tcms-ai-include-item {
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        font-size: 0.82rem;
+    }
+
+    .tcms-ai-include-item span {
+        margin-right: 0.4rem;
+    }
+
+    .tcms-ai-note {
+        margin-top: 1rem;
+        padding: 0.85rem 1rem;
+        border: 1px solid rgba(96, 165, 250, 0.18);
+        border-radius: 10px;
+        background: rgba(96, 165, 250, 0.06);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 800px) {
+        .tcms-ai-summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tcms-ai-includes {
+            grid-template-columns: 1fr;
+        }
+
+        .tcms-ai-title-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .tcms-ai-version {
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .tcms-ai-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .tcms-ai-actions {
+            flex-direction: column;
+        }
+
+        .tcms-ai-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+
+<div class="tcms-ai-header">
+
+    <a href="/tcms" class="tcms-ai-back">
+        ← Back to Test Cases
+    </a>
+
+    <div class="tcms-ai-title-row">
+
+        <div>
+            <div class="tcms-ai-eyebrow">
+                AI AGENT EXPORT
+            </div>
+
+            <h2 class="tcms-ai-title">
+                AI-Ready Test Case Export
+            </h2>
+
+            <p class="tcms-ai-description">
+                Export structured TCMS test case data for AI agents,
+                automation workflows, and local tooling.
+            </p>
+        </div>
+
+        <div class="tcms-ai-version">
+            <span>SCHEMA</span>
+            <strong>v1.0</strong>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card tcms-ai-card">
+
+    <div class="tcms-ai-card-heading">
+        <div>
+            <h3>Export Summary</h3>
+            <p>Current test case data available through the AI export.</p>
+        </div>
+    </div>
+
+    <div class="tcms-ai-summary">
+
+        <div class="tcms-ai-summary-item">
+            <div class="tcms-ai-summary-label">
+                Test Cases
+            </div>
+            <div class="tcms-ai-summary-value">
+                {{ total }}
+            </div>
+        </div>
+
+        <div class="tcms-ai-summary-item">
+            <div class="tcms-ai-summary-label">
+                Active
+            </div>
+            <div class="tcms-ai-summary-value">
+                {{ cases | selectattr("status", "equalto", "active") | list | length }}
+            </div>
+        </div>
+
+        <div class="tcms-ai-summary-item">
+            <div class="tcms-ai-summary-label">
+                Format
+            </div>
+            <div class="tcms-ai-summary-value">
+                JSON
+            </div>
+        </div>
+
+        <div class="tcms-ai-summary-item">
+            <div class="tcms-ai-summary-label">
+                Access
+            </div>
+            <div class="tcms-ai-summary-value">
+                Read-only
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tcms-ai-actions">
+
+        <a href="/api/tcms/export.json" class="btn btn-primary tcms-ai-action-primary">
+            ↓ Download JSON
+        </a>
+
+        <a href="/api/tcms/export.json" target="_blank" class="btn btn-secondary">
+            View Raw JSON
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="card tcms-ai-card">
+
+    <div class="tcms-ai-card-heading">
+        <div>
+            <h3>Export Includes</h3>
+            <p>Structured information provided to AI agents.</p>
+        </div>
+    </div>
+
+    <div class="tcms-ai-includes">
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            Test case details
+        </div>
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            Test steps
+        </div>
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            Business rules
+        </div>
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            Expected results
+        </div>
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            Jira links
+        </div>
+
+        <div class="tcms-ai-include-item">
+            <span>✓</span>
+            ID status
+        </div>
+
+    </div>
+
+    <div class="tcms-ai-note">
+        The export is read-only and is intended to provide AI agents
+        with structured test case and business-rule context without
+        modifying TCMS data.
+    </div>
+
+</div>
+
+
+<div class="card tcms-ai-card">
+
+    <div class="tcms-ai-card-heading">
+        <div>
+            <h3>Test Case Preview</h3>
+            <p>Cases currently available in the export.</p>
+        </div>
+    </div>
+
+    <div class="tcms-ai-preview">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Title</th>
+                    <th>Area</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for case in cases %}
+
+                <tr>
+
+                    <td>
+                        <span class="tcms-ai-case-id">
+                            {{ case.case_id }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ case.title or '(None)' }}
+                    </td>
+
+                    <td>
+                        {{ case.area or 'general' }}
+                    </td>
+
+                    <td>
+                        {{ case.test_type }}
+                    </td>
+
+                    <td>
+                        <span class="badge badge-{{ case.status }}">
+                            {{ case.status }}
+                        </span>
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        No test cases available for export.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

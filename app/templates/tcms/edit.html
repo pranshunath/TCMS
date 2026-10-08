@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ case.case_id }} - TCMS{% endblock %}
+
+{% block content %}<style>
+  .tcms-specification-section {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .tcms-edit-form-card {
+    padding: 1.5rem;
+  }
+
+  .tcms-form-section-heading {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tcms-form-section-heading h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .tcms-form-section-heading p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .tcms-edit-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .tcms-edit-back {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+  }
+
+  .tcms-edit-back:hover {
+    color: var(--text);
+  }
+
+  .tcms-edit-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+  }
+
+  .tcms-edit-eyebrow {
+    margin-bottom: 0.35rem;
+    color: #60a5fa;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .tcms-edit-title {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+
+  .tcms-edit-case-id {
+    margin-left: 0.35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .tcms-edit-description {
+    margin: 0.45rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .tcms-version-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 10px;
+    background: rgba(96, 165, 250, 0.07);
+    min-width: 100px;
+  }
+
+  .tcms-version-preview span {
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+  }
+
+  .tcms-version-preview strong {
+    color: #60a5fa;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 700px) {
+    .tcms-edit-title-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tcms-version-preview {
+      align-items: flex-start;
+    }
+  }
+
+  .tcms-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .tcms-save-button {
+    min-width: 170px;
+  }
+
+  @media (max-width: 600px) {
+    .tcms-edit-actions {
+      flex-direction: column-reverse;
+    }
+
+    .tcms-edit-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="tcms-edit-header">
+
+  <a href="/tcms/cases/{{ case.case_id }}" class="tcms-edit-back">
+    ← Cancel and View Case
+  </a>
+
+  <div class="tcms-edit-title-row">
+
+    <div>
+      <div class="tcms-edit-eyebrow">
+        TEST CASE EDITOR
+      </div>
+
+      <h2 class="tcms-edit-title">
+        Edit Test Case
+        <span class="tcms-edit-case-id">
+          {{ case.case_id }}
+        </span>
+      </h2>
+
+      <p class="tcms-edit-description">
+        Update the test case details and save a new version.
+      </p>
+    </div>
+
+    <div class="tcms-version-preview">
+      <span>NEW VERSION</span>
+      <strong>v{{ case.version + 1 }}</strong>
+    </div>
+
+  </div>
+
+</div>
+<div class="card tcms-edit-form-card">
+
+  <div class="tcms-form-section-heading">
+    <div>
+      <h3>Test Case Details</h3>
+      <p>Update the core information for this test case.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/tcms/cases/{{ case.case_id }}/edit">
+
+    <div class="form-group">
+      <label>Case Title</label>
+      <input type="text" name="title" value="{{ case.title or '' }}" required>
+    </div>
+
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Area / Domain</label>
+        <input type="text" name="area" value="{{ case.area or '' }}" placeholder="e.g. auth, cart, loyalty">
+      </div>
+      <div class="form-group">
+        <label>Test Type</label>
+        <select name="test_type">
+          <option value="api" {% if case.test_type=='api' %}selected{% endif %}>API</option>
+          <option value="grpc" {% if case.test_type=='grpc' %}selected{% endif %}>gRPC</option>
+          <option value="ui" {% if case.test_type=='ui' %}selected{% endif %}>UI</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="draft" {% if case.status=='draft' %}selected{% endif %}>Draft</option>
+          <option value="active" {% if case.status=='active' %}selected{% endif %}>Active</option>
+          <option value="deprecated" {% if case.status=='deprecated' %}selected{% endif %}>Deprecated</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Test Steps</label>
+      <textarea name="steps" rows="6"
+        placeholder="1. Set up test precondition&#10;2. Call endpoint or perform action&#10;3. Verify response">{{ case.steps or '' }}</textarea>
+    </div>
+
+    <div class="tcms-specification-section">
+
+      <div class="tcms-field-heading">
+        <h3>Test Specification</h3>
+        <p>Define what business rule is being validated and what result should be expected.</p>
+      </div>
+
+      <div class="grid-2">
+
+        <div class="form-group">
+          <label>Business Rule Covered</label>
+          <textarea name="business_rule" rows="4"
+            placeholder="Describe the business logic or specification rule this test validates...">{{ case.business_rule or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Expected Result</label>
+          <textarea name="expected_result" rows="4"
+            placeholder="Specific expected result, status code, points calculated, etc...">{{ case.expected_result or '' }}</textarea>
+        </div>
+
+      </div>
+
+    </div>
+    <div class="tcms-change-summary-section">
+
+      <div class="tcms-field-heading">
+        <h3>Version Update</h3>
+        <p>Add an optional note describing what changed in this version.</p>
+      </div>
+
+      <div class="form-group">
+        <label>Change Summary</label>
+        <input type="text" name="change_summary" placeholder="e.g. Added steps for negative balance test">
+      </div>
+
+    </div>
+    <div class="tcms-edit-actions">
+
+      <a href="/tcms/cases/{{ case.case_id }}" class="btn btn-secondary">
+        Cancel
+      </a>
+
+      <button type="submit" class="btn btn-primary tcms-save-button">
+        Save Changes · v{{ case.version + 1 }}
+      </button>
+
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,906 @@
+{% extends "base.html" %}
+
+{% block title %}Test Cases - TCMS{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ============================================
+     TCMS LIST PAGE
+     UI-only styles
+     ============================================ */
+
+  .tcms-page {
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Page Header ---------- */
+
+  .tcms-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .tcms-page-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    color: var(--text);
+  }
+
+  .tcms-page-subtitle {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .tcms-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  /* ---------- Filter Panel ---------- */
+
+  .tcms-filter-card {
+    background: var(--card-bg, var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  }
+
+  .tcms-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .tcms-filter-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 650;
+  }
+
+  .tcms-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(150px, 1fr)) auto;
+    gap: 0.8rem;
+    align-items: end;
+  }
+
+  .tcms-filter-grid .form-group {
+    margin: 0;
+  }
+
+  .tcms-filter-grid label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .tcms-filter-grid input,
+  .tcms-filter-grid select {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+  }
+
+  .tcms-search-input {
+    position: relative;
+  }
+
+  .tcms-search-input input {
+    padding-left: 2.5rem;
+  }
+
+  .tcms-search-icon {
+    position: absolute;
+    left: 0.85rem;
+    bottom: 0.7rem;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .tcms-filter-button {
+    height: 42px;
+    min-width: 90px;
+  }
+
+  .tcms-clear-filter-button {
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.2s ease;
+  }
+
+  .tcms-clear-filter-button:hover {
+    color: var(--text);
+    background: rgba(148, 163, 184, 0.08);
+  }
+
+  /* ---------- Results Header ---------- */
+
+  .tcms-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+  }
+
+  .tcms-results-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .tcms-results-count {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .tcms-results-subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .tcms-results-count strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* ---------- Table ---------- */
+
+  .tcms-table-card {
+    background: var(--card-bg, var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+  }
+
+  .tcms-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .tcms-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .tcms-table thead {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .tcms-table th {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .tcms-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .tcms-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .tcms-table tbody tr:hover {
+    background: rgba(96, 165, 250, 0.045);
+  }
+
+  .tcms-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ---------- Case ID ---------- */
+
+  .tcms-case-id {
+    color: var(--primary);
+    text-decoration: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .tcms-case-id:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- Title ---------- */
+
+  .tcms-case-title {
+    max-width: 420px;
+    font-weight: 650;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------- Badges ---------- */
+
+  .tcms-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.14);
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .tcms-status {
+    text-transform: capitalize;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+  }
+
+  .tcms-jira-badge {
+    background: rgba(37, 99, 235, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    padding: 0.32rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    transition: 0.2s ease;
+  }
+
+  .tcms-jira-badge:hover {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .tcms-no-jira {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  .tcms-version {
+    color: var(--text-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+  }
+
+  /* ---------- Actions ---------- */
+
+  .tcms-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    white-space: nowrap;
+  }
+
+  .tcms-actions .btn {
+    min-width: 58px;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  .tcms-actions .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  /* ---------- Empty State ---------- */
+
+  .tcms-empty {
+    padding: 5rem 1.5rem !important;
+    text-align: center;
+  }
+
+  .tcms-empty-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    font-size: 1.5rem;
+  }
+
+  .tcms-empty-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .tcms-empty-text {
+    max-width: 420px;
+    margin: 0 auto;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  /* ---------- Footer ---------- */
+
+  .tcms-results-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.9rem 0.25rem 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 1100px) {
+    .tcms-filter-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .tcms-filter-button-wrapper {
+      display: flex;
+      align-items: flex-end;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .tcms-page-header {
+      flex-direction: column;
+    }
+
+    .tcms-header-actions {
+      width: 100%;
+    }
+
+    .tcms-header-actions .btn {
+      flex: 1;
+    }
+
+    .tcms-filter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tcms-results-header {
+      align-items: flex-start;
+      gap: 0.5rem;
+      flex-direction: column;
+    }
+  }
+
+  .tcms-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tcms-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #1e293b;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 14px;
+    transition: 0.2s ease;
+  }
+
+  .tcms-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(96, 165, 250, 0.35);
+  }
+
+  .tcms-stat-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    font-size: 1.2rem;
+  }
+
+  .tcms-stat-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .tcms-stat-value {
+    color: var(--text);
+    font-size: 1.7rem;
+    font-weight: 750;
+    line-height: 1.2;
+    margin-top: 0.2rem;
+  }
+
+  .tcms-stat-description {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+  }
+
+  @media (max-width: 1000px) {
+    .tcms-summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .tcms-summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tcms-filter-subtitle {
+    margin: 0.35rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+</style>
+
+
+<div class="tcms-page">
+
+  <!-- =========================
+       PAGE HEADER
+       ========================= -->
+
+  <div class="tcms-page-header">
+
+    <div>
+      <h1 class="tcms-page-title">
+        Test Case Management
+      </h1>
+
+      <p class="tcms-page-subtitle">
+        Central repository for automated Rewards test cases
+      </p>
+    </div>
+
+    {% if current_user and current_user.role == 'admin' %}
+    <div class="tcms-header-actions">
+      <a href="/tcms/import" class="btn btn-secondary">
+        📥 Import Cases
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+
+  <!-- =========================
+     DASHBOARD SUMMARY
+     ========================= -->
+
+  <div class="tcms-summary-grid">
+
+    <div class="tcms-stat-card">
+      <div class="tcms-stat-icon">📋</div>
+      <div class="tcms-stat-content">
+        <div class="tcms-stat-label">TOTAL CASES</div>
+        <div class="tcms-stat-value">{{ total_cases }}</div>
+        <div class="tcms-stat-description">All test cases</div>
+      </div>
+    </div>
+
+    <div class="tcms-stat-card">
+      <div class="tcms-stat-icon">✓</div>
+      <div class="tcms-stat-content">
+        <div class="tcms-stat-label">ACTIVE</div>
+        <div class="tcms-stat-value">{{ active_cases }}</div>
+        <div class="tcms-stat-description">Ready for execution</div>
+      </div>
+    </div>
+
+    <div class="tcms-stat-card">
+      <div class="tcms-stat-icon">◷</div>
+      <div class="tcms-stat-content">
+        <div class="tcms-stat-label">DRAFT</div>
+        <div class="tcms-stat-value">{{ draft_cases }}</div>
+        <div class="tcms-stat-description">Under preparation</div>
+      </div>
+    </div>
+
+    <div class="tcms-stat-card">
+      <div class="tcms-stat-icon">⚠</div>
+      <div class="tcms-stat-content">
+        <div class="tcms-stat-label">DEPRECATED</div>
+        <div class="tcms-stat-value">{{ deprecated_cases }}</div>
+        <div class="tcms-stat-description">No longer maintained</div>
+      </div>
+    </div>
+
+  </div>
+  <!-- =========================
+       FILTERS
+       ========================= -->
+
+  <div class="tcms-filter-card">
+
+    <div class="tcms-filter-header">
+      <div>
+        <h3 class="tcms-filter-title">
+          Find Test Cases
+        </h3>
+
+        <p class="tcms-filter-subtitle">
+          Search and filter test cases by ID, area, status, or Jira key.
+        </p>
+      </div>
+    </div>
+
+    <form method="get" action="/tcms">
+
+      <div class="tcms-filter-grid">
+
+        <!-- Search -->
+
+        <div class="form-group">
+
+          <label for="tcms-search">
+            Search
+          </label>
+
+          <div class="tcms-search-input">
+
+            <span class="tcms-search-icon">
+              🔍
+            </span>
+
+            <input id="tcms-search" type="text" name="search" value="{{ search or '' }}"
+              placeholder="Case ID, title, or business rule...">
+
+          </div>
+
+        </div>
+
+
+        <!-- Area -->
+
+        <div class="form-group">
+
+          <label for="tcms-area">
+            Area
+          </label>
+
+          <input id="tcms-area" type="text" name="area" value="{{ area or '' }}" placeholder="e.g. checkout">
+
+        </div>
+
+
+        <!-- Status -->
+
+        <div class="form-group">
+
+          <label for="tcms-status">
+            Status
+          </label>
+
+          <select id="tcms-status" name="status_filter">
+
+            <option value="">
+              All Statuses
+            </option>
+
+            <option value="active" {% if status=='active' %}selected{% endif %}>
+              Active
+            </option>
+
+            <option value="draft" {% if status=='draft' %}selected{% endif %}>
+              Draft
+            </option>
+
+            <option value="deprecated" {% if status=='deprecated' %}selected{% endif %}>
+              Deprecated
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- Jira -->
+
+        <div class="form-group">
+
+          <label for="tcms-jira">
+            Jira Key
+          </label>
+
+          <input id="tcms-jira" type="text" name="jira_key" value="{{ jira_key or '' }}" placeholder="e.g. REW-123">
+
+        </div>
+
+
+        <!-- Filter -->
+
+        <!-- Filter Actions -->
+
+        <div class="tcms-filter-button-wrapper">
+
+          <button type="submit" class="btn btn-primary tcms-filter-button">
+            Apply Filters
+          </button>
+
+          <a href="/tcms" class="tcms-clear-filter-button">
+            Clear Filters
+          </a>
+
+        </div>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- =========================
+       RESULTS HEADER
+       ========================= -->
+
+  <div class="tcms-results-header">
+
+    <div>
+      <h2 class="tcms-results-title">
+        Test Cases
+      </h2>
+
+      <p class="tcms-results-subtitle">
+        Manage and review your test case repository
+      </p>
+    </div>
+
+    <div class="tcms-results-count">
+      <strong>{{ cases|length }}</strong> displayed · {{ total }} total cases
+    </div>
+
+  </div>
+
+  <!-- =========================
+       TEST CASE TABLE
+       ========================= -->
+
+  <div class="tcms-table-card">
+
+    <div class="tcms-table-wrapper">
+
+      <table class="tcms-table">
+
+        <thead>
+
+          <tr>
+            <th>Case ID</th>
+            <th>Title</th>
+            <th>Area</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Version</th>
+            <th>Jira</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {% if cases %}
+
+          {% for c in cases %}
+
+          <tr>
+
+            <!-- Case ID -->
+
+            <td>
+
+              <a href="/tcms/cases/{{ c.case_id }}" class="tcms-case-id">
+                {{ c.case_id }}
+              </a>
+
+            </td>
+
+
+            <!-- Title -->
+
+            <td>
+
+              <div class="tcms-case-title" title="{{ c.title or '(No title)' }}">
+                {{ c.title or '(No title)' }}
+              </div>
+
+            </td>
+
+
+            <!-- Area -->
+
+            <td>
+
+              <span class="tcms-badge">
+                {{ c.area or 'general' }}
+              </span>
+
+            </td>
+
+
+            <!-- Type -->
+
+            <td>
+
+              <span class="tcms-badge">
+                {{ c.test_type }}
+              </span>
+
+            </td>
+
+
+            <!-- Status -->
+
+            <td>
+
+              <span class="badge badge-{{ c.status }} tcms-status">
+                {{ c.status }}
+              </span>
+
+            </td>
+
+
+            <!-- Version -->
+
+            <td>
+
+              <span class="tcms-version">
+                v{{ c.version }}
+              </span>
+
+            </td>
+
+
+            <!-- Jira -->
+
+            <td>
+
+              {% if c.jira_links %}
+
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+
+                {% for j in c.jira_links %}
+
+                <span class="tcms-badge tcms-jira-badge">
+                  {{ j.jira_key }}
+                </span>
+
+                {% endfor %}
+
+              </div>
+
+              {% else %}
+
+              <span class="tcms-no-jira">
+                —
+              </span>
+
+              {% endif %}
+
+            </td>
+
+
+            <!-- Actions -->
+
+            <td>
+
+              <div class="tcms-actions">
+
+                <a href="/tcms/cases/{{ c.case_id }}" class="btn btn-secondary btn-sm">
+                  View
+                </a>
+
+                {% if current_user and current_user.can_edit() %}
+
+                <a href="/tcms/cases/{{ c.case_id }}/edit" class="btn btn-primary btn-sm">
+                  Edit
+                </a>
+
+                {% endif %}
+
+              </div>
+
+            </td>
+
+          </tr>
+
+          {% endfor %}
+
+          {% else %}
+
+          <tr>
+
+            <td colspan="8" class="tcms-empty">
+
+              <div class="tcms-empty-icon">
+                🔍
+              </div>
+
+              <h3 class="tcms-empty-title">
+                No test cases found
+              </h3>
+
+              <p class="tcms-empty-text">
+                Try adjusting your search or filters.
+              </p>
+
+            </td>
+
+          </tr>
+
+          {% endif %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       RESULTS FOOTER
+       ========================= -->
+
+  <div class="tcms-results-footer">
+
+    Showing {{ cases|length }} of {{ total }} cases
+
+  </div>
+
+</div>
+
+{% endblock %}

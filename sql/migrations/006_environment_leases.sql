@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS EnvironmentLeases (
+    environment VARCHAR(50) PRIMARY KEY,
+    holder_identity VARCHAR(100) NOT NULL,
+    acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

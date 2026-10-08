@@ -1,0 +1,739 @@
+{% extends "base.html" %}
+
+{% block title %}{{ case.case_id }} - TCMS{% endblock %}
+
+
+{% block content %}
+
+<style>
+  .tcms-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .tcms-detail-heading {
+    min-width: 0;
+  }
+
+  .tcms-back-link {
+    display: inline-block;
+    margin-bottom: 0.55rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+  }
+
+  .tcms-back-link:hover {
+    color: var(--text);
+  }
+
+  .tcms-case-heading-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .tcms-detail-case-id {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 1.6rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+
+  .tcms-detail-label {
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .tcms-detail-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* ---------- Case Metadata ---------- */
+
+  .tcms-section-heading {
+    margin-bottom: 1rem;
+  }
+
+  .tcms-section-heading h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .tcms-section-heading p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .tcms-metadata-list {
+    width: 100%;
+  }
+
+  .tcms-metadata-row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tcms-metadata-row:last-child {
+    border-bottom: none;
+  }
+
+  .tcms-metadata-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .tcms-metadata-value {
+    min-width: 0;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  .tcms-metadata-title .tcms-metadata-value {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .tcms-source-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .tcms-unsafe-badge {
+    background: var(--danger) !important;
+    margin-left: 0.4rem;
+  }
+
+  @media (max-width: 600px) {
+    .tcms-metadata-row {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .tcms-detail-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tcms-detail-actions {
+      width: 100%;
+    }
+
+    .tcms-detail-actions .btn {
+      flex: 1;
+    }
+  }
+
+  /* ---------- Execution Outcome ---------- */
+
+  .tcms-execution-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 62px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .tcms-execution-passed {
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .tcms-execution-failed {
+    background: rgba(239, 68, 68, 0.14);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .tcms-execution-other {
+    background: rgba(148, 163, 184, 0.14);
+    color: var(--text-muted);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  /* ---------- Version History ---------- */
+
+  .tcms-version-card {
+    margin-top: 1.5rem;
+  }
+
+  .tcms-version-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .tcms-version-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tcms-version-table th {
+    padding: 0.85rem 1rem;
+    background: rgba(148, 163, 184, 0.06);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .tcms-version-table td {
+    padding: 0.9rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.85rem;
+  }
+
+  .tcms-version-table tbody tr {
+    transition: background 0.15s ease;
+  }
+
+  .tcms-version-table tbody tr:hover {
+    background: rgba(148, 163, 184, 0.05);
+  }
+
+  .tcms-version-number {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.55rem;
+    border-radius: 7px;
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+  }
+
+  .tcms-version-editor {
+    font-weight: 600;
+  }
+
+  .tcms-change-summary {
+    color: var(--text-muted);
+  }
+
+  /* ---------- Jira Tickets ---------- */
+
+  .tcms-jira-card {
+    min-width: 0;
+  }
+
+  .tcms-jira-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .tcms-jira-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .tcms-jira-header p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .tcms-jira-evidence {
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .tcms-jira-evidence:hover {
+    text-decoration: underline;
+  }
+
+  .tcms-jira-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .tcms-jira-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0.85rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tcms-jira-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(96, 165, 250, 0.25);
+  }
+
+  .tcms-jira-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .tcms-jira-key {
+    color: #60a5fa;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .tcms-jira-kind {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.1);
+  }
+
+  .tcms-jira-unlink {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.7rem;
+  }
+
+  .tcms-jira-empty {
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .tcms-jira-empty-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.4rem;
+    opacity: 0.75;
+  }
+
+  .tcms-jira-empty p {
+    margin: 0 0 0.25rem;
+    font-weight: 600;
+  }
+
+  .tcms-jira-empty span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .tcms-jira-link-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .tcms-jira-link-form input {
+    width: auto;
+    flex: 1;
+  }
+
+  @media (max-width: 600px) {
+    .tcms-jira-header {
+      flex-direction: column;
+    }
+
+    .tcms-jira-link-form {
+      flex-direction: column;
+    }
+
+    .tcms-jira-link-form button {
+      width: 100%;
+    }
+  }
+</style>
+
+
+<div class="tcms-detail-header">
+
+  <div class="tcms-detail-heading">
+
+    <a href="/tcms" class="tcms-back-link">
+      ← Back to Test Cases
+    </a>
+
+    <div class="tcms-case-heading-row">
+      <h2 class="tcms-detail-case-id">
+        {{ case.case_id }}
+      </h2>
+
+      <span class="tcms-detail-label">
+        TEST CASE
+      </span>
+    </div>
+
+  </div>
+
+  <div class="tcms-detail-actions">
+
+    <!-- Run this case button -->
+    <a href="#run-modal" onclick="document.getElementById('run-form-box').style.display='block'"
+      class="btn btn-success">
+      ▶ Run this case
+    </a>
+
+    {% if current_user and current_user.can_edit() %}
+    <a href="/tcms/cases/{{ case.case_id }}/edit" class="btn btn-primary">
+      ✏️ Edit Case
+    </a>
+    {% endif %}
+
+  </div>
+
+</div>
+<!-- Run Trigger Box (Hidden by default) -->
+<div id="run-form-box" class="card" style="display: none; border: 1px solid var(--success);">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h3 style="color: var(--success); font-size: 1.1rem;">⚡ Execute Single Test Case</h3>
+    <button onclick="document.getElementById('run-form-box').style.display='none'"
+      class="btn btn-secondary btn-sm">Close</button>
+  </div>
+  <form method="post" action="/tcms/cases/{{ case.case_id }}/run"
+    style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
+    <div class="form-group" style="margin: 0;">
+      <label>Environment</label>
+      <select name="environment">
+        <option value="pre-prod">pre-prod (Rewards)</option>
+        <option value="staging">staging</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin: 0;">
+      <label>Execution Mode</label>
+      <input type="text" value="Exact Selection (case_ids=[{{ case.case_id }}])" disabled>
+    </div>
+    <button type="submit" class="btn btn-success" style="height: 38px;">Confirm & Run</button>
+  </form>
+</div>
+<!-- Overview Grid -->
+
+<div class="grid-2">
+
+  <div class="card tcms-jira-card">
+    <div class="tcms-jira-header">
+      <div>
+        <h3>Linked Jira Tickets</h3>
+        <p>Track Jira issues associated with this test case</p>
+      </div>
+
+      <a href="/api/tcms/jira/REW-REPORT/report.csv" class="tcms-jira-evidence">
+        CSV evidence
+      </a>
+    </div>
+
+    {% if case.jira_links %}
+
+    <div class="tcms-jira-list">
+
+      {% for j in case.jira_links %}
+
+      <div class="tcms-jira-item">
+
+        <div class="tcms-jira-info">
+
+          <span class="tcms-jira-key">
+            {{ j.jira_key }}
+          </span>
+
+          <span class="tcms-jira-kind">
+            {{ j.link_kind }}
+          </span>
+
+        </div>
+
+        {% if current_user and current_user.can_edit() %}
+
+        <form method="post" action="/tcms/cases/{{ case.case_id }}/jira/{{ j.jira_key }}/delete">
+
+          <button type="submit" class="btn btn-danger btn-sm tcms-jira-unlink">
+            Unlink
+          </button>
+
+        </form>
+
+        {% endif %}
+
+      </div>
+
+      {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="tcms-jira-empty">
+      <div class="tcms-jira-empty-icon">🔗</div>
+      <p>No Jira tickets linked yet.</p>
+      <span>Link a Jira issue to keep this test case traceable.</span>
+    </div>
+
+    {% endif %}
+
+
+    {% if current_user and current_user.can_edit() %}
+
+    <form method="post" action="/tcms/cases/{{ case.case_id }}/jira" class="tcms-jira-link-form">
+
+      <input type="text" name="jira_key" placeholder="e.g. REW-404" required>
+
+      <button type="submit" class="btn btn-secondary btn-sm">
+        + Link Ticket
+      </button>
+
+    </form>
+
+    {% endif %}
+
+  </div>
+
+  <!-- Specification Sections -->
+
+  <div class="card tcms-metadata-card">
+    <div class="tcms-section-heading">
+      <div>
+        <h3>Case Metadata</h3>
+        <p>Key information about this test case</p>
+      </div>
+    </div>
+
+    <div class="tcms-metadata-list">
+
+      <div class="tcms-metadata-row tcms-metadata-title">
+        <div class="tcms-metadata-label">Title</div>
+        <div class="tcms-metadata-value">
+          <strong>{{ case.title or '(None)' }}</strong>
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Status</div>
+        <div class="tcms-metadata-value">
+          <span class="badge badge-{{ case.status }}">{{ case.status }}</span>
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Area</div>
+        <div class="tcms-metadata-value">
+          <span class="badge">{{ case.area or 'general' }}</span>
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Test Type</div>
+        <div class="tcms-metadata-value">
+          <span class="badge">{{ case.test_type }}</span>
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Platform</div>
+        <div class="tcms-metadata-value">
+          {{ case.platform }}
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Version</div>
+        <div class="tcms-metadata-value">
+          v{{ case.version }}
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">Source Code</div>
+        <div class="tcms-metadata-value tcms-source-code">
+          {{ case.source_path }} :: {{ case.source_symbol }}
+        </div>
+      </div>
+
+      <div class="tcms-metadata-row">
+        <div class="tcms-metadata-label">ID Classification</div>
+        <div class="tcms-metadata-value">
+
+          <span class="badge">
+            {{ case.id_status }}
+          </span>
+
+          {% if case.substring_unsafe %}
+          <span class="badge tcms-unsafe-badge">
+            substring unsafe
+          </span>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="grid-2">
+
+  <div class="card">
+    <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">🎯 Business Rule</h3>
+    <div
+      style="background: #090d16; padding: 1rem; border-radius: 0.375rem; border: 1px solid var(--border); white-space: pre-wrap; font-size: 0.9rem;">
+      {{ case.business_rule or 'No business rule specified.' }}
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">✅ Expected Result</h3>
+    <div
+      style="background: #090d16; padding: 1rem; border-radius: 0.375rem; border: 1px solid var(--border); white-space: pre-wrap; font-size: 0.9rem;">
+      {{ case.expected_result or 'No expected result specified.' }}
+    </div>
+  </div>
+</div>
+
+<!-- Execution History Section -->
+<div class="card">
+  <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">📊 Execution History</h3>
+  {% if executions %}
+  <table>
+    <thead>
+      <tr>
+        <th>Outcome</th>
+        <th>Run ID</th>
+        <th>Environment</th>
+        <th>Triggered By</th>
+        <th>Duration</th>
+        <th>Started At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ex in executions %}
+      <tr>
+        <td>
+          <span class="tcms-execution-badge
+  {% if ex.outcome == 'Passed' %}
+    tcms-execution-passed
+  {% elif ex.outcome == 'Failed' %}
+    tcms-execution-failed
+  {% else %}
+    tcms-execution-other
+  {% endif %}">
+            {{ ex.outcome }}
+          </span>
+        </td>
+        <td style="font-family: monospace; font-size: 0.85rem;">{{ ex.run_id }}</td>
+        <td>{{ ex.environment }}</td>
+        <td>{{ ex.triggered_by }}</td>
+        <td>{{ ex.duration_ms }} ms</td>
+        <td>{{ ex.started_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted); font-size: 0.875rem;">No execution records found for test case ID {{
+    case.case_id
+    }}.</p>
+  {% endif %}
+</div>
+
+<!-- Version History Section -->
+<div class="card tcms-version-card">
+
+  <div class="tcms-section-heading">
+    <div>
+      <h3>📜 Version History Snapshots</h3>
+      <p>Track changes made to this test case over time</p>
+    </div>
+  </div>
+
+  <div class="tcms-version-table-wrapper">
+
+    <table class="tcms-version-table">
+
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Edited At</th>
+          <th>Editor</th>
+          <th>Status</th>
+          <th>Change Summary</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {% for v in versions %}
+
+        <tr>
+
+          <td>
+            <span class="tcms-version-number">
+              v{{ v.version }}
+            </span>
+          </td>
+
+          <td>
+            {{ v.edited_at }}
+          </td>
+
+          <td>
+            <span class="tcms-version-editor">
+              {{ v.edited_by }}
+            </span>
+          </td>
+
+          <td>
+            <span class="badge badge-{{ v.status }}">
+              {{ v.status }}
+            </span>
+          </td>
+
+          <td>
+            <span class="tcms-change-summary">
+              {{ v.change_summary or 'Updated' }}
+            </span>
+          </td>
+
+        </tr>
+
+        {% endfor %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+{% endblock %}

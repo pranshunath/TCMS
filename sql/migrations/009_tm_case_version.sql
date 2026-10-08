@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS TmCaseVersion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id VARCHAR(100) NOT NULL,
+    version INT NOT NULL,
+    title VARCHAR(255) NOT NULL DEFAULT '',
+    area VARCHAR(100) NOT NULL DEFAULT '',
+    test_type VARCHAR(20) NOT NULL DEFAULT 'api',
+    source_path VARCHAR(255) NOT NULL DEFAULT '',
+    source_symbol VARCHAR(255) NOT NULL DEFAULT '',
+    is_skipped BOOLEAN NOT NULL DEFAULT FALSE,
+    steps TEXT NULL,
+    business_rule TEXT NULL,
+    expected_result TEXT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'draft',
+    edited_by VARCHAR(100) NOT NULL DEFAULT 'system',
+    edited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    change_summary VARCHAR(255) NULL,
+    UNIQUE KEY uq_case_version (case_id, version),
+    INDEX idx_tm_case_version_case (case_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

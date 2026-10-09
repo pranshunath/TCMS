@@ -387,3 +387,41 @@ def test_real_failure():
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+def test_real_go_runner_execution():
+    """Verifies TCMS can execute an existing Go test and record its result."""
+    headers = {"X-User-Email": "editor@vananam.com"}
+
+    tcms_store.create_case({
+        "case_id": "TC_GO_RUNNER_01",
+        "platform": "rewards",
+        "title": "Go runner integration check",
+        "test_type": "api",
+        "runner_type": "go",
+        "source_path": "tests/order_cart_test.go",
+        "source_symbol": "TestCartAndOrderFlow",
+        "is_skipped": False,
+        "id_status": "unique",
+        "substring_unsafe": False,
+        "status": "active",
+    })
+
+    response = client.post(
+        "/tcms/cases/TC_GO_RUNNER_01/run",
+        data={"environment": "pre-prod"},
+        headers=headers,
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+    results = db.query(
+        "SELECT * FROM TestCaseResult "
+        "WHERE test_case_id = %s ORDER BY id DESC LIMIT 1",
+        ("TC_GO_RUNNER_01",),
+    )
+    assert results, "TCMS did not record a result for the Go test"
+
+    result = results[0]
+    assert result["outcome"] == "Passed", result.get("error_message")
+    assert result["duration_ms"] is not None
+    assert result["error_message"] is None

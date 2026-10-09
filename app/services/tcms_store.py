@@ -79,6 +79,7 @@ def create_case(data: Dict[str, Any], user_email: str = "system") -> Dict[str, A
     test_type = data.get("test_type", "api")
     source_path = data.get("source_path", "")
     source_symbol = data.get("source_symbol", "")
+    runner_type = data.get("runner_type", "pytest")
     is_skipped = bool(data.get("is_skipped", False))
     id_status = data.get("id_status", "unique")
     substring_unsafe = bool(data.get("substring_unsafe", False))
@@ -88,15 +89,16 @@ def create_case(data: Dict[str, Any], user_email: str = "system") -> Dict[str, A
     status = data.get("status", "draft")
     version = 1
 
+
     insert_sql = """
         INSERT INTO TmCase (
             case_id, platform, title, area, test_type,
-            source_path, source_symbol, is_skipped, id_status,
+            source_path, source_symbol, runner_type, is_skipped, id_status,
             substring_unsafe, steps, business_rule, expected_result,
             status, version, created_by, updated_by
         ) VALUES (
             %s, %s, %s, %s, %s,
-            %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
             %s, %s, %s, %s,
             %s, %s, %s, %s
         )
@@ -105,21 +107,22 @@ def create_case(data: Dict[str, Any], user_email: str = "system") -> Dict[str, A
         insert_sql,
         (
             case_id, platform, title, area, test_type,
-            source_path, source_symbol, is_skipped, id_status,
+            source_path, source_symbol, runner_type, is_skipped, id_status,
             substring_unsafe, steps, business_rule, expected_result,
             status, version, user_email, user_email,
         ),
     )
 
+
     # Initial snapshot in TmCaseVersion
     version_sql = """
         INSERT INTO TmCaseVersion (
             case_id, version, title, area, test_type,
-            source_path, source_symbol, is_skipped, steps,
+            source_path, source_symbol, runner_type, is_skipped, steps,
             business_rule, expected_result, status, edited_by, change_summary
         ) VALUES (
             %s, %s, %s, %s, %s,
-            %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s
         )
     """
@@ -127,10 +130,11 @@ def create_case(data: Dict[str, Any], user_email: str = "system") -> Dict[str, A
         version_sql,
         (
             case_id, version, title, area, test_type,
-            source_path, source_symbol, is_skipped, steps,
+            source_path, source_symbol, runner_type, is_skipped, steps,
             business_rule, expected_result, status, user_email, "Initial creation",
         ),
     )
+
 
     try:
         from app.services import tcms_audit
@@ -165,11 +169,13 @@ def update_case(
     test_type = updates.get("test_type", current["test_type"])
     source_path = updates.get("source_path", current["source_path"])
     source_symbol = updates.get("source_symbol", current["source_symbol"])
+    runner_type = updates.get("runner_type", current.get("runner_type", "pytest"))
     is_skipped = bool(updates.get("is_skipped", current["is_skipped"]))
     steps = updates.get("steps", current["steps"])
     business_rule = updates.get("business_rule", current["business_rule"])
     expected_result = updates.get("expected_result", current["expected_result"])
     status = updates.get("status", current["status"])
+
 
     update_sql = """
         UPDATE TmCase SET
@@ -178,6 +184,7 @@ def update_case(
             test_type = %s,
             source_path = %s,
             source_symbol = %s,
+            runner_type = %s,
             is_skipped = %s,
             steps = %s,
             business_rule = %s,
@@ -192,20 +199,22 @@ def update_case(
         update_sql,
         (
             title, area, test_type, source_path, source_symbol,
-            is_skipped, steps, business_rule, expected_result,
+            runner_type, is_skipped, steps, business_rule, expected_result,
             status, new_version, user_email, case_id,
         ),
     )
+
+
 
     # Snapshot to TmCaseVersion
     version_sql = """
         INSERT INTO TmCaseVersion (
             case_id, version, title, area, test_type,
-            source_path, source_symbol, is_skipped, steps,
+            source_path, source_symbol, runner_type, is_skipped, steps,
             business_rule, expected_result, status, edited_by, change_summary
         ) VALUES (
             %s, %s, %s, %s, %s,
-            %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s
         )
     """
@@ -213,11 +222,12 @@ def update_case(
         version_sql,
         (
             case_id, new_version, title, area, test_type,
-            source_path, source_symbol, is_skipped, steps,
+            source_path, source_symbol, runner_type, is_skipped, steps,
             business_rule, expected_result, status, user_email,
             change_summary or f"Updated to version {new_version}",
         ),
     )
+
 
     try:
         from app.services import tcms_audit
@@ -421,6 +431,7 @@ def import_scanned_cases(cases_list: List[Dict[str, Any]], user_email: str) -> D
         existing = db.query("SELECT * FROM TmCase WHERE case_id = %s", (case_id,))
         if existing:
             # Update source/code attributes, keep steps, rule, result, status
+
             update_sql = """
                 UPDATE TmCase SET
                     platform = %s,
@@ -429,6 +440,7 @@ def import_scanned_cases(cases_list: List[Dict[str, Any]], user_email: str) -> D
                     test_type = %s,
                     source_path = %s,
                     source_symbol = %s,
+                    runner_type = %s,
                     is_skipped = %s,
                     id_status = %s,
                     substring_unsafe = %s,
@@ -445,6 +457,7 @@ def import_scanned_cases(cases_list: List[Dict[str, Any]], user_email: str) -> D
                     item.get("test_type", existing[0]["test_type"]),
                     item.get("source_path", existing[0]["source_path"]),
                     item.get("source_symbol", existing[0]["source_symbol"]),
+                    item.get("runner_type", existing[0].get("runner_type", "pytest")),
                     bool(item.get("is_skipped", False)),
                     item.get("id_status", "unique"),
                     bool(item.get("substring_unsafe", False)),
@@ -452,6 +465,7 @@ def import_scanned_cases(cases_list: List[Dict[str, Any]], user_email: str) -> D
                     case_id,
                 ),
             )
+
             updated += 1
         else:
             # Create fresh draft case

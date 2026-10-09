@@ -253,13 +253,14 @@ class FakeDatabaseDouble:
                 "test_type": params[4],
                 "source_path": params[5],
                 "source_symbol": params[6],
-                "is_skipped": params[7],
-                "steps": params[8],
-                "business_rule": params[9],
-                "expected_result": params[10],
-                "status": params[11],
-                "edited_by": params[12],
-                "change_summary": params[13],
+                "runner_type": params[7],
+                "is_skipped": params[8],
+                "steps": params[9],
+                "business_rule": params[10],
+                "expected_result": params[11],
+                "status": params[12],
+                "edited_by": params[13],
+                "change_summary": params[14],
                 "edited_at": datetime.now(),
             })
             return row_id
@@ -277,16 +278,17 @@ class FakeDatabaseDouble:
                 "test_type": params[4],
                 "source_path": params[5],
                 "source_symbol": params[6],
-                "is_skipped": params[7],
-                "id_status": params[8],
-                "substring_unsafe": params[9],
-                "steps": params[10],
-                "business_rule": params[11],
-                "expected_result": params[12],
-                "status": params[13],
-                "version": params[14],
-                "created_by": params[15],
-                "updated_by": params[16],
+                "runner_type": params[7],
+                "is_skipped": params[8],
+                "id_status": params[9],
+                "substring_unsafe": params[10],
+                "steps": params[11],
+                "business_rule": params[12],
+                "expected_result": params[13],
+                "status": params[14],
+                "version": params[15],
+                "created_by": params[16],
+                "updated_by": params[17],
                 "created_at": datetime.now(),
                 "updated_at": datetime.now(),
             }
@@ -297,31 +299,35 @@ class FakeDatabaseDouble:
             cid = params[-1]
             if cid in self.cases:
                 c = self.cases[cid]
-                if len(params) == 13:
+
+                if len(params) == 14:
                     c["title"] = params[0]
                     c["area"] = params[1]
                     c["test_type"] = params[2]
                     c["source_path"] = params[3]
                     c["source_symbol"] = params[4]
-                    c["is_skipped"] = params[5]
-                    c["steps"] = params[6]
-                    c["business_rule"] = params[7]
-                    c["expected_result"] = params[8]
-                    c["status"] = params[9]
-                    c["version"] = params[10]
-                    c["updated_by"] = params[11]
+                    c["runner_type"] = params[5]
+                    c["is_skipped"] = params[6]
+                    c["steps"] = params[7]
+                    c["business_rule"] = params[8]
+                    c["expected_result"] = params[9]
+                    c["status"] = params[10]
+                    c["version"] = params[11]
+                    c["updated_by"] = params[12]
                     c["updated_at"] = datetime.now()
-                elif len(params) == 11:
+
+                elif len(params) == 12:
                     c["platform"] = params[0]
                     c["title"] = params[1]
                     c["area"] = params[2]
                     c["test_type"] = params[3]
                     c["source_path"] = params[4]
                     c["source_symbol"] = params[5]
-                    c["is_skipped"] = params[6]
-                    c["id_status"] = params[7]
-                    c["substring_unsafe"] = params[8]
-                    c["updated_by"] = params[9]
+                    c["runner_type"] = params[6]
+                    c["is_skipped"] = params[7]
+                    c["id_status"] = params[8]
+                    c["substring_unsafe"] = params[9]
+                    c["updated_by"] = params[10]
                     c["updated_at"] = datetime.now()
                 return 1
             return 0
@@ -493,6 +499,7 @@ def create_seeded_dev_double() -> FakeDatabaseDouble:
             "test_type": "api",
             "source_path": "tests/test_checkout.py",
             "source_symbol": "test_checkout_order_discount_gold",
+            "runner_type": "pytest",
             "is_skipped": False,
             "id_status": "unique",
             "substring_unsafe": False,
@@ -563,6 +570,7 @@ def create_seeded_dev_double() -> FakeDatabaseDouble:
             "test_type": c["test_type"],
             "source_path": c["source_path"],
             "source_symbol": c["source_symbol"],
+            "runner_type": c.get("runner_type", "pytest"),
             "is_skipped": c["is_skipped"],
             "steps": c["steps"],
             "business_rule": c["business_rule"],

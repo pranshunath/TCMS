@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS TmCaseVersion (
     test_type VARCHAR(20) NOT NULL DEFAULT 'api',
     source_path VARCHAR(255) NOT NULL DEFAULT '',
     source_symbol VARCHAR(255) NOT NULL DEFAULT '',
+    runner_type VARCHAR(20) NOT NULL DEFAULT 'pytest',
     is_skipped BOOLEAN NOT NULL DEFAULT FALSE,
     steps TEXT NULL,
     business_rule TEXT NULL,

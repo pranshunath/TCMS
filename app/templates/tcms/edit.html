@@ -202,6 +202,16 @@
           <option value="ui" {% if case.test_type=='ui' %}selected{% endif %}>UI</option>
         </select>
       </div>
+
+      <div class="form-group">
+        <label>Runner Type</label>
+        <select name="runner_type">
+          <option value="pytest" {% if case.runner_type=='pytest' or not case.runner_type %}selected{% endif %}>Python
+            (pytest)</option>
+          <option value="go" {% if case.runner_type=='go' %}selected{% endif %}>Go</option>
+        </select>
+      </div>
+
       <div class="form-group">
         <label>Status</label>
         <select name="status">

@@ -334,6 +334,7 @@ def export_cases_for_ai(
             "title": c.get("title", ""),
             "area": c.get("area", ""),
             "test_type": c.get("test_type", "api"),
+            "runner_type": c.get("runner_type", "pytest"),
             "platform": c.get("platform", "rewards"),
             "steps": c.get("steps") or "",
             "business_rule": c.get("business_rule") or "",

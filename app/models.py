@@ -10,6 +10,9 @@ class CaseUpdatePayload(BaseModel):
     test_type: Optional[str] = None
     source_path: Optional[str] = None
     source_symbol: Optional[str] = None
+
+    runner_type: Optional[str] = None
+
     is_skipped: Optional[bool] = None
     steps: Optional[str] = None
     business_rule: Optional[str] = None
@@ -24,11 +27,19 @@ class CaseUpdatePayload(BaseModel):
             raise ValueError("status must be 'draft', 'active', or 'deprecated'")
         return v
 
+
     @field_validator("test_type")
     @classmethod
     def validate_test_type(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and v not in ("api", "grpc", "ui"):
             raise ValueError("test_type must be 'api', 'grpc', or 'ui'")
+        return v
+
+    @field_validator("runner_type")
+    @classmethod
+    def validate_runner_type(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("pytest", "go"):
+            raise ValueError("runner_type must be 'pytest' or 'go'")
         return v
 
 
@@ -40,6 +51,7 @@ class CaseCreatePayload(BaseModel):
     test_type: str = "api"
     source_path: str = ""
     source_symbol: str = ""
+    runner_type: str = "pytest"
     is_skipped: bool = False
     id_status: str = "unique"
     substring_unsafe: bool = False

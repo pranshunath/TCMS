@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.dependencies import UserContext, require_role, get_current_user
 from app.models import (
+    CaseCreatePayload,
     CaseUpdatePayload,
     ImportPayload,
     JiraLinkPayload,
@@ -45,6 +46,35 @@ def list_test_cases(
         "limit": limit,
         "offset": offset,
     }
+
+    
+@router.post("/cases", status_code=status.HTTP_201_CREATED)
+def create_test_case(
+    payload: CaseCreatePayload,
+    user: UserContext = Depends(require_role("editor")),
+):
+    """Creates a test case (Editor/Admin role)."""
+    case_id = payload.case_id.strip()
+
+    if not case_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="case_id cannot be empty",
+        )
+
+    if tcms_store.get_case(case_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Test case '{case_id}' already exists",
+        )
+
+    data = payload.model_dump()
+    data["case_id"] = case_id
+
+    created = tcms_store.create_case(data, user_email=user.email)
+
+    return created
+
 
 
 @router.get("/cases/{case_id}")

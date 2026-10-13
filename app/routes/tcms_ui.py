@@ -31,7 +31,7 @@ def ui_list_cases(
         limit=100,
         offset=0,
     )
-        # Dashboard summary statistics
+    # Dashboard summary statistics
     _, total_cases = tcms_store.list_cases(
         limit=1,
         offset=0,
@@ -54,7 +54,7 @@ def ui_list_cases(
         limit=1,
         offset=0,
     )
-       
+
     return templates.TemplateResponse(
         request=request,
         name="tcms/list.html",
@@ -73,6 +73,74 @@ def ui_list_cases(
             "draft_cases": draft_cases,
             "deprecated_cases": deprecated_cases,
         },
+    )
+
+
+@ui_router.get("/cases/create", response_class=HTMLResponse)
+def ui_create_case_form(
+    request: Request,
+    user: UserContext = Depends(require_role("editor")),
+):
+    """Displays the Create Test Case form."""
+    return templates.TemplateResponse(
+        request=request,
+        name="tcms/create.html",
+        context={"current_user": user},
+    )
+
+
+@ui_router.post("/cases/create")
+def ui_submit_create_case(
+    case_id: str = Form(...),
+    platform: str = Form("rewards"),
+    title: str = Form(...),
+    area: str = Form(""),
+    test_type: str = Form("api"),
+    runner_type: str = Form("pytest"),
+    status: str = Form("draft"),
+    source_path: str = Form(""),
+    source_symbol: str = Form(""),
+    steps: Optional[str] = Form(None),
+    business_rule: Optional[str] = Form(None),
+    expected_result: Optional[str] = Form(None),
+    user: UserContext = Depends(require_role("editor")),
+):
+    """Creates a test case and its initial version."""
+    clean_case_id = case_id.strip()
+    clean_title = title.strip()
+
+    if not clean_case_id or not clean_title:
+        raise HTTPException(
+            status_code=422,
+            detail="Case ID and title cannot be empty.",
+        )
+
+    if tcms_store.get_case(clean_case_id):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Test case '{clean_case_id}' already exists.",
+        )
+
+    tcms_store.create_case(
+        data={
+            "case_id": clean_case_id,
+            "platform": platform.strip(),
+            "title": clean_title,
+            "area": area.strip(),
+            "test_type": test_type,
+            "runner_type": runner_type,
+            "status": status,
+            "source_path": source_path.strip(),
+            "source_symbol": source_symbol.strip(),
+            "steps": steps,
+            "business_rule": business_rule,
+            "expected_result": expected_result,
+        },
+        user_email=user.email,
+    )
+    return RedirectResponse(
+        url=f"/tcms/cases/{clean_case_id}?dev_user={user.email}",
+        status_code=303,
     )
 
 
@@ -154,7 +222,11 @@ def ui_submit_case_edit(
         user_email=user.email,
         change_summary=change_summary,
     )
-    return RedirectResponse(url=f"/tcms/cases/{case_id}", status_code=303)
+    return RedirectResponse(
+        url=f"/tcms/cases/{case_id}",
+        status_code=303,
+    )
+
 
 
 @ui_router.post("/cases/{case_id}/jira")

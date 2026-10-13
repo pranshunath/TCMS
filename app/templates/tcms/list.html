@@ -504,13 +504,21 @@
       </p>
     </div>
 
-    {% if current_user and current_user.role == 'admin' %}
+
+    {% if current_user and current_user.can_edit() %}
     <div class="tcms-header-actions">
+      <a href="/tcms/cases/create" class="btn btn-primary">
+        + Create Test Case
+      </a>
+
+      {% if current_user.role == 'admin' %}
       <a href="/tcms/import" class="btn btn-secondary">
         📥 Import Cases
       </a>
+      {% endif %}
     </div>
     {% endif %}
+
 
   </div>
 

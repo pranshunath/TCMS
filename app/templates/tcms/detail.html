@@ -408,7 +408,7 @@
     </a>
 
     {% if current_user and current_user.can_edit() %}
-    <a href="/tcms/cases/{{ case.case_id }}/edit" class="btn btn-primary">
+    <a href="/tcms/cases/{{ case.case_id }}/edit?dev_user={{ current_user.email }}" class="btn btn-primary">
       ✏️ Edit Case
     </a>
     {% endif %}
@@ -423,7 +423,7 @@
     <button onclick="document.getElementById('run-form-box').style.display='none'"
       class="btn btn-secondary btn-sm">Close</button>
   </div>
-  <form method="post" action="/tcms/cases/{{ case.case_id }}/run"
+  <form method="post" action="/tcms/cases/{{ case.case_id }}/run?dev_user={{ current_user.email }}"
     style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
     <div class="form-group" style="margin: 0;">
       <label>Environment</label>

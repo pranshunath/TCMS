@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Create Test Case - TCMS{% endblock %}
+
+{% block content %}
+<style>
+    .tcms-create-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .tcms-create-back {
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .tcms-create-back:hover {
+        color: var(--text);
+    }
+
+    .tcms-create-title {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+    }
+
+    .tcms-create-description {
+        margin-top: 0.45rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .tcms-create-card {
+        padding: 1.5rem;
+    }
+
+    .tcms-create-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .tcms-create-section h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .tcms-create-section p {
+        margin-top: 0.3rem;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .tcms-create-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .tcms-create-submit {
+        min-width: 170px;
+    }
+
+    @media (max-width: 600px) {
+        .tcms-create-actions {
+            flex-direction: column-reverse;
+        }
+
+        .tcms-create-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="tcms-create-header">
+    <a href="/tcms" class="tcms-create-back">← Back to Test Cases</a>
+
+    <div>
+        <div style="color:#60a5fa;font-size:.68rem;font-weight:700;letter-spacing:.08em;margin-bottom:.35rem;">
+            TEST CASE EDITOR
+        </div>
+
+        <h2 class="tcms-create-title">Create Test Case</h2>
+
+        <p class="tcms-create-description">
+            Add a new test case to your test management system.
+        </p>
+    </div>
+</div>
+
+<div class="card tcms-create-card">
+    <form method="post" action="/tcms/cases/create?dev_user={{ current_user.email }}">
+
+        <div class="tcms-create-section">
+            <h3>Test Case Details</h3>
+            <p>Enter the identifier and core information for this test case.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="case_id">Case ID</label>
+                <input id="case_id" type="text" name="case_id" placeholder="e.g. TC_AUTH_001" pattern="[A-Za-z0-9_-]+"
+                    title="Use letters, numbers, underscores, or hyphens." required>
+            </div>
+
+            <div class="form-group">
+                <label for="platform">Platform</label>
+                <input id="platform" type="text" name="platform" value="rewards" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Case Title</label>
+                <input id="title" type="text" name="title" placeholder="Describe what the test validates" required>
+            </div>
+
+            <div class="form-group">
+                <label for="area">Area / Domain</label>
+                <input id="area" type="text" name="area" placeholder="e.g. auth, cart, loyalty">
+            </div>
+
+            <div class="form-group">
+                <label for="test_type">Test Type</label>
+                <select id="test_type" name="test_type">
+                    <option value="api">API</option>
+                    <option value="grpc">gRPC</option>
+                    <option value="ui">UI</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="runner_type">Runner Type</label>
+                <select id="runner_type" name="runner_type">
+                    <option value="pytest">Python (pytest)</option>
+                    <option value="go">Go</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="draft">Draft</option>
+                    <option value="active">Active</option>
+                    <option value="deprecated">Deprecated</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="source_path">Source Path</label>
+                <input id="source_path" type="text" name="source_path" placeholder="Optional test file path">
+            </div>
+
+            <div class="form-group">
+                <label for="source_symbol">Source Symbol</label>
+                <input id="source_symbol" type="text" name="source_symbol" placeholder="Optional function or test name">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="steps">Test Steps</label>
+            <textarea id="steps" name="steps" rows="6"
+                placeholder="1. Set up the preconditions&#10;2. Perform the action&#10;3. Verify the response"></textarea>
+        </div>
+
+        <div class="tcms-create-section">
+            <h3>Test Specification</h3>
+            <p>Describe the business rule and the expected result.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="business_rule">Business Rule Covered</label>
+                <textarea id="business_rule" name="business_rule" rows="4"
+                    placeholder="What business logic does this test validate?"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="expected_result">Expected Result</label>
+                <textarea id="expected_result" name="expected_result" rows="4"
+                    placeholder="What result should the test produce?"></textarea>
+            </div>
+        </div>
+
+        <div class="tcms-create-actions">
+            <a href="/tcms" class="btn btn-secondary">Cancel</a>
+
+            <button type="submit" class="btn btn-primary tcms-create-submit">
+                Create Test Case
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

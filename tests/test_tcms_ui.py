@@ -106,3 +106,82 @@ def test_ui_jira_compliance_report_loads():
     assert "TC_UI_001" in response.text
     assert "/api/tcms/jira/REW-1234/report.csv" in response.text
     assert "/api/tcms/jira/REW-1234/audit-pack" in response.text
+def test_ui_create_page_blocks_viewer():
+    headers = {"X-User-Email": "viewer@vananam.com"}
+
+    response = client.get(
+        "/tcms/cases/create",
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+
+
+def test_ui_create_page_allows_editor():
+    headers = {"X-User-Email": "editor@vananam.com"}
+
+    response = client.get(
+        "/tcms/cases/create",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert "Create Test Case" in response.text
+    assert 'name="case_id"' in response.text
+    assert 'name="runner_type"' in response.text
+
+
+def test_ui_submit_create_case_creates_and_redirects():
+    headers = {"X-User-Email": "editor@vananam.com"}
+    form_data = {
+        "case_id": "TC_UI_CREATE_001",
+        "platform": "product-management",
+        "title": "Go Cart Integration Test",
+        "area": "Cart and Orders",
+        "test_type": "api",
+        "runner_type": "go",
+        "status": "active",
+        "source_path": "tests/order_cart_test.go",
+        "source_symbol": "TestCartAndOrderFlow",
+        "steps": "Execute the Go integration test",
+        "business_rule": "Cart and order flow works correctly",
+        "expected_result": "The integration test passes",
+    }
+
+    response = client.post(
+        "/tcms/cases/create",
+        data=form_data,
+        headers=headers,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        "/tcms/cases/TC_UI_CREATE_001"
+        "?dev_user=editor@vananam.com"
+    )
+
+    created = tcms_store.get_case("TC_UI_CREATE_001")
+    assert created is not None
+    assert created["title"] == "Go Cart Integration Test"
+    assert created["platform"] == "product-management"
+    assert created["runner_type"] == "go"
+    assert created["status"] == "active"
+
+
+def test_ui_submit_create_case_rejects_duplicate_id():
+    headers = {"X-User-Email": "editor@vananam.com"}
+    form_data = {
+        "case_id": "TC_UI_001",
+        "title": "Duplicate Test Case",
+    }
+
+    response = client.post(
+        "/tcms/cases/create",
+        data=form_data,
+        headers=headers,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 409
+    assert "TC_UI_001" in response.text

@@ -56,11 +56,17 @@ def validate_and_prepare_run(req: TriggerRequest, user_email: str) -> Dict[str, 
                     detail=f"Test case ID '{cid}' does not exist in TCMS database",
                 )
 
-            # Platform must be rewards
-            if case.get("platform", "").lower() != "rewards":
+            # Only allow explicitly supported platforms
+            supported_platforms = {"rewards", "product-management"}
+            platform = (case.get("platform") or "").strip().lower()
+
+            if platform not in supported_platforms:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Test case '{cid}' belongs to '{case.get('platform')}' platform. Only 'rewards' is supported in MVP.",
+                    detail=(
+                        f"Test case '{cid}' belongs to '{platform}' platform. "
+                        f"Supported platforms: {', '.join(sorted(supported_platforms))}."
+                    ),
                 )
 
             # Refuse ambiguous IDs
